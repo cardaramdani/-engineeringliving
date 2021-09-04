@@ -1,0 +1,17 @@
+
+/node_modules
+/public/data_schedule
+/public/dataIMG_kwhmeterunit
+/public/dataIMG_kwhcomersile
+/public/dataIMG_watermeterunit
+/public/dataIMG_user
+/storage/*.key
+/vendor
+.env
+.env.backup
+.phpunit.result.cache
+docker-compose.override.yml
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
