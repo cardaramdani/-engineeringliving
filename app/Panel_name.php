@@ -5,15 +5,12 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
-class Rooms extends Model
+class Panel_name extends Model
 {
+    protected $table = 'panel_names';
+    protected $fillable =['name', 'room_id'];
     public function getCreatedAtAttribute(){
         return Carbon::Parse($this->attributes['created_at'])->translatedFormat('Y/m/d H:i:s, l');
      }
-    protected $table = 'rooms';
-   protected $fillable =[
-       'name',
-       'equipment_id',
-        'tower_id', 'floor_id'
-	];
+    //room_id, name
 }

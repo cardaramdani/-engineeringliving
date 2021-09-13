@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Unit_ac extends Model
 {
-    protected $table = 'unit_acs';
+    protected $table = 'unit_ac';
     //$total = ['wbp'+'lwbp'];
     protected $fillable =['name', 'room_id'];
     public function getCreatedAtAttribute(){
