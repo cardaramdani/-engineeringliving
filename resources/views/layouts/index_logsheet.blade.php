@@ -176,7 +176,7 @@
                 <div class="sub-menu">
                   <a href="{{ url('/data')}}"><i class="fas fa-folder"></i><span>Data</span></a>
 
-                  <a href="{{ url('/buildng-data')}}"><i class="fas fa-building"></i><span>Building Data</span></a>
+                  <a href="{{ url('/building-data')}}"><i class="fas fa-building"></i><span>Building Data</span></a>
 
                   <a href="{{ url('/lisensi')}}"><i class="fas fa-id-badge"></i><span>Lisensi</span></a>
 

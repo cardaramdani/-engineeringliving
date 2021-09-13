@@ -14,7 +14,7 @@
     <div class="panel">
         <div class="row">
             <div class="col-md-8">
-                <h1 style="font-weight: bold; margin-left: 15px;">FLOORS</h1>
+                <h1 style="font-weight: bold; margin-left: 15px;">BUILDING DATA</h1>
             </div>
             <div class="btn-group" role="group" aria-label="Basic example">
                 @role('Eng-teknisi|Admin|Eng-spv|')
@@ -23,7 +23,8 @@
             </div>
         </div>
         <div class="row input-daterange">
-            <div class="form-group col-md-4">
+                <div class="form-group col-md-4">
+                    <label for="tower_change">Tower</label>
                 <select class="custom-select" id="tower_change" name="tower_change" required>
                 @foreach ($Towers as $tower)
                 <option value="{{$tower->id}}">{{$tower->tower}}</option>
@@ -37,10 +38,25 @@
         <div class="panel">
             <div class="card-body">
             <!-- MULAI TABLE -->
+        <div class="row input-daterange">
+            <div class="form-group col-md-4">
+                <a href="">Floor</a>
+            </div>
+            <div class="form-group col-md-4">
+                <a href="">Room</a>
+            </div>
+            <div class="form-group col-md-4">
+                <a href="">Unit type</a>
+            </div>
+            <div class="form-group col-md-4">
+                <a href="">Unit list</a>
+            </div>
+        </div>
+
             <table class="table table-striped table-bordered table-sm" id="table_floors">
                 <thead>
                     <tr>
-                        <th class="align-center">NAME</th>
+                        <th class="align-center">FLOOR</th>
                         @role('Admin|Eng-spv|')
                         <th width="19%">ACTIONS</th>
                         @endrole
@@ -159,7 +175,7 @@
                         @endrole
                     ],
                     order: [
-                        [0, 'decs']
+                        [0, 'asc']
                     ],
                 });
             }
