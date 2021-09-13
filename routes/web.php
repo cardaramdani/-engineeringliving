@@ -338,6 +338,7 @@ Route::group(['middleware' => ['verified','role:Admin']], function () {
 
 	//tower
 			Route::get('/towers', 'TowersController@index')->name('towers.index');
+			Route::get('/towers/tower', 'TowersController@indextower')->name('towers.index');
             Route::get('/towers/edit/{towers}', 'TowersController@edit');
             Route::post('/towers/add', 'TowersController@store')->name('towers.store');
 			Route::patch('/towers/edit/{towers}', 'TowersController@update');
@@ -354,10 +355,14 @@ Route::group(['middleware' => ['verified','role:Admin']], function () {
 			Route::patch('/equipment/edit/{equipment}', 'EquipmentController@update');
 		    Route::delete('/equipment/delete/{equipment}', 'EquipmentController@destroy');
 	//building data
-			Route::get('/building-data', 'BuildingController@index');
-	//equipment
+			Route::get('/building-data', 'BuildingController@index')->name('building-data.index');
+            Route::get('/building-data/edit/{data}', 'BuildingController@edit');
+			Route::post('/building-data/add', 'BuildingController@store')->name('building-data.store');
+			Route::delete('/building-data/delete/{data}', 'BuildingController@destroy');
+    //equipment
 			Route::get('/floor', 'FloorController@index')->name('floor.index');
             Route::get('/floor/edit/{floor}', 'FloorController@edit');
+            Route::get('/floor/tower', 'PmacController@indexfloor');
 			Route::post('/floor/add', 'FloorController@store')->name('floor.store');
 			Route::delete('/floor/delete/{floor}', 'FloorController@destroy');
 		});
