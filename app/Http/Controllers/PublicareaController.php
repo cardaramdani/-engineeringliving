@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\PublicArea;
+use App\Rooms;
 use Illuminate\Http\Request;
 
 class PublicareaController extends Controller
@@ -13,8 +13,8 @@ class PublicareaController extends Controller
      */
     public function index()
     {
-        $PublicArea = PublicArea::orderBy('created_at', 'desc')->Paginate(20);
-            return view('/management_data.indexpublicarea', compact('PublicArea'));
+        $Rooms = Rooms::orderBy('created_at', 'desc')->Paginate(20);
+            return view('/management_data.indexrooms', compact('Rooms'));
     }
 
     /**

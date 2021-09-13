@@ -7,8 +7,8 @@ use App\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\http\Controllers\Controller;
-use App\PublicArea;
-use App\Equipment;
+use App\Towers;
+use App\Floor;
 use App\Category_wo;
 use App\Category_system;
 use App\Rooms;
@@ -90,13 +90,43 @@ class PmacController extends Controller
 
 
         }
-        $categories = Rooms::where('equipment_id', '1')->get();
-        return view('ac.indexpm', compact('categories'));
+        // $equipment_ac = "2";
+        // $tower_podium = "4";
+
+        // $categories = Rooms::where('equipment_id', $equipment_ac)
+        // ->where('tower_id' , $tower_podium )
+        // ->get('name');
+        $Tower = Towers::all();
+        return view('ac.indexpm', compact('Tower'));
     }
-    public function indexsubcat($id)
+    public function indextower()
     {
-            $data = Rooms::where('equipment_id', $id)->get();
-        // return response()->json(['success'=> $data]);
+        $data = Towers::all();
+        echo json_encode($data);
+    }
+    public function indexlantai($id)
+    {
+        $id_floor = Towers::where('tower', $id)->get('id');
+        $s = $id_floor[0];
+        $floor = $s['id'];
+        $data = Floor::where('tower_floor_id', $floor)->get();
+        echo json_encode($data);
+    }
+
+    public function indexlokasi(Request $request)
+    {
+        $lantai = $request->lantai;
+        $tower = $request->tower;
+        $equipment = "2";
+        $id_tower = Towers::where('tower', $tower)->get('id');
+        $s = $id_tower[0];
+        $tower = $s['id'];
+        $id_floor = Floor::where('name', $lantai)->get('id');
+        $s = $id_floor[0];
+        $floor = $s['id'];
+        $data = Rooms::where('tower_id', $tower)
+        ->where('floor_id', $floor)
+        ->where('equipment_id', $equipment)->get();
         echo json_encode($data);
     }
     public function indexitem($id)
@@ -106,37 +136,7 @@ class PmacController extends Controller
         $room = $s['id'];
         // return response()->json($id, 200);
         $data = Unit_ac::where('room_id', $room)->get();
-        // return response()->json(['success'=> $data]);
         echo json_encode($data);
-    }
-
-    // public function indexwocat($id)
-    // {
-    //         $data = Category_system::where('wo_category_id', $id)->get();
-    //     // return response()->json(['success'=> $data]);
-    //     echo json_encode($data);
-    // }
-    // public function indexcat($id)
-    // {
-    //         $data = Equipment::where('id', $id)->get();
-    //     // return response()->json(['success'=> $data]);
-    //     echo json_encode($data);
-    // }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    public function createpm()
-    {
-        $Area = PublicArea::all();
-        return view('/ac.createpm', compact('Area'));
     }
 
     /**
@@ -190,6 +190,9 @@ class PmacController extends Controller
         $rules = array(
             'jadwalpm'=> 'required',
             'planpm'=> 'required',
+            'tower'=> 'required',
+            'lantai'=> 'required',
+            'lokasi_unit'=> 'required',
             'item_no'=> 'required',
             'l1'=> 'required',
             'l2'=> 'required',
@@ -226,6 +229,23 @@ class PmacController extends Controller
             return response()->json(['errors' => $error->errors()->all()]);
         }
 
+        if ($request->tower_baru === $request->tower) {
+            $tower= $request->tower_baru;
+         }else{
+             // $l_unit = Rooms::where('id', $request->lokasi_unit)->get('name');
+             // $s = $l_unit[0];
+             // $lokasi_unit = $s['name'];
+             $tower = $request->tower;
+         }
+         if ($request->lantai_baru === $request->lantai) {
+            $lantai= $request->lantai_baru;
+         }else{
+             // $l_unit = Rooms::where('id', $request->lokasi_unit)->get('name');
+             // $s = $l_unit[0];
+             // $lokasi_unit = $s['name'];
+             $lantai = $request->lantai;
+         }
+
         if ($request->lokasi_unit_baru === $request->lokasi_unit) {
            $lokasi_unit= $request->lokasi_unit_baru;
         }else{
@@ -248,6 +268,8 @@ class PmacController extends Controller
             'teknisi'=> $teknisi,
             'jadwalpm'=> $request->jadwalpm,
             'planpm'=> $request->planpm,
+            'tower'=> $tower,
+            'lantai'=> $lantai,
             'lokasi_unit'=> $lokasi_unit,
             'item_no'=> $item_no,
             'l1'=> $request->l1,
@@ -335,11 +357,6 @@ class PmacController extends Controller
         return $pdf->download($nama_file);
     }
 
-    public function showpm(Pmac $pmac)
-    {
-        $Area = PublicArea::all();
-        return view('/ac.viewpm', compact('pmac', 'Area'));
-    }
     /**
      * Show the form for editing the specified resource.
      *

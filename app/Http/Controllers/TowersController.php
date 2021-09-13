@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Towers;
 use Illuminate\Http\Request;
+use Validator;
 
 class TowersController extends Controller
 {
@@ -12,20 +13,74 @@ class TowersController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $Towers = Towers::orderBy('created_at', 'desc')->Paginate(20);
-        return view('/management_data.indextower', compact('Towers'));
+        if($request->ajax()){
+
+            //Jika request from_date ada value(datanya) maka
+            if(!empty($request->from_date))
+            {
+                //Jika tanggal awal(from_date) hingga tanggal akhir(to_date) adalah sama maka
+                if($request->from_date === $request->to_date){
+                    //kita filter tanggalnya sesuai dengan request from_date
+                    $data = Towers::whereDate('created_at','=', $request->from_date)->get();
+                }
+                else{
+                    $from_date=$request->from_date;
+                    $to_date=$request->to_date;
+                    $menitawal="00:00:00";
+                    $menitakhir="23:59:59";
+                    $awalkaping= $from_date.' '.$menitawal;
+                    $tungtungkaping=$to_date.' '.$menitakhir;
+                    //kita filter dari tanggal awal ke akhir
+                    $data = Towers::whereBetween('created_at', array($awalkaping, $tungtungkaping))
+                    ->orderBy('created_at', 'desc')->get();
+                }
+            }
+            //load data default
+            else
+            {
+                $data = Towers::orderBy('created_at', 'desc')->get();
+            }
+            if ($request->to_date != null) {
+                return datatables()->of($data)
+                        ->addColumn('action', function($data){
+                            $button = '<a href="javascript:void(0)" data-toggle="tooltip"  data-id="'.$data->id.'" data-original-title="Edit" class="edit btn btn-info btn-sm edit-post"><i class="far fa-edit"></i></a>';
+                            $button .= '&nbsp;&nbsp;';
+                            $button .= '<button type="button" name="delete" id="'.$data->id.'" class="delete btn btn-danger btn-sm"><i class="far fa-trash-alt"></i></button>';
+                            $button .= '&nbsp;&nbsp;';
+                            $button .= '<a href="javascript:void(0)" data-toggle="tooltip"  data-id="'.$data->id.'" data-original-title="Export-pdf" id="Export-pdf" class="Export-pdf btn btn-info btn-sm pdf-post" ><i class="fas fa-file-pdf"></i> pdf</a>';
+                            $button .= '&nbsp;&nbsp;';
+                            $button .= '<a href="javascript:void(0)" data-toggle="tooltip"  data-id="'.$data->id.'" data-original-title="Export-xlsx" id="Export-xlsx" class="Export-xlsx btn btn-info btn-sm xlsx-post" ><i class="fas fa-file-excel"></i> xlsx</a>';
+                            return $button;
+                        })
+                        ->rawColumns(['action'])
+                        ->addIndexColumn()
+                        ->make(true);
+            }else{
+                return datatables()->of($data)
+                        ->addColumn('action', function($data){
+                            $button = '<div class="panel"><a href="javascript:void(0)" data-toggle="tooltip"  data-id="'.$data->id.'" data-original-title="Edit" class="edit btn btn-info btn-sm edit-post"><i class="far fa-edit"></i></a>';
+                            $button .= '&nbsp;&nbsp;';
+                            $button .= '<button type="button" name="delete" id="'.$data->id.'" class="delete btn btn-danger btn-sm"><i class="far fa-trash-alt"></i></button></div>';
+
+                            return $button;
+                        })
+                        ->rawColumns(['action'])
+                        ->addIndexColumn()
+                        ->make(true);
+            }
+
+
+        }
+
+        return view('management_data.indextower');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function indextower()
     {
-        //
+        $data = Towers::all();
+        echo json_encode($data);
     }
 
     /**
@@ -36,30 +91,26 @@ class TowersController extends Controller
      */
     public function store(Request $request)
     {
-
-        $request->validate([
+        $id = $request->id;
+        $rules =array(
             'tower'=>'required',
             'tower_type'=>'required',
-            
-        ]);
+        );
+        $error = Validator::make($request->all(), $rules);
 
-        Towers::create([
-            'tower'=> $request->tower, 
-            'tower_type'=> $request->tower_type, 
-            
-        ]);
-        return redirect('/tower' )->with('toast_success','Data Berhasil Ditambahkan');
-    }
+        if($error->fails())
+        {
+            return response()->json(['errors' => $error->errors()->all()]);
+        }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Towers  $towers
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Towers $towers)
-    {
-        //
+        $data =array(
+            'tower'=> $request->tower,
+            'tower_type'=> $request->tower_type,
+
+        );
+        $data = Towers::updateOrCreate(['id' => $id], $data);
+
+        return response()->json(['success' => $data]);
     }
 
     /**
@@ -70,29 +121,10 @@ class TowersController extends Controller
      */
     public function edit(Towers $towers)
     {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Towers  $towers
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Towers $tower)
-    {
-         $request->validate([
-            'tower'=>'required',
-            'tower_type'=>'required',]);
-
-        Towers::where ('id', $tower->id)
-        ->update([
-                    'tower'=>$request->tower,
-                    'tower_type'=>$request->tower_type,
-                   
-                ]);
-return redirect('/tower' )->with('toast_info','Data Berhasil Diedit');
+        $where = array('id' => $towers->id);
+        $post  = Towers::where($where)->first();
+        // return response()->json($post);
+        return response()->json($post, 200);
     }
 
     /**
@@ -101,9 +133,9 @@ return redirect('/tower' )->with('toast_info','Data Berhasil Diedit');
      * @param  \App\Towers  $towers
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Towers $tower)
+    public function destroy(Towers $towers)
     {
-         $tower->delete();
-    return redirect('/tower' )->with('toast_warning','Data Berhasil Dihapus');
+        $data = Towers::findOrFail($towers->id);
+        $data->delete();
     }
 }

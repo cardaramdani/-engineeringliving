@@ -7,6 +7,8 @@ use App\Pmpanel;
 use App\Equipment;
 use App\Towers;
 use App\Floor;
+use App\Panel_name;
+use App\Rooms;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\User;
@@ -16,6 +18,7 @@ use RealRashid\SweetAlert\Facades\Alert;
 use App\Exports\PowerhouseExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Validator;
+use PDF;
 class PowerHousesController extends Controller
 {
     /**
@@ -67,36 +70,99 @@ class PowerHousesController extends Controller
         }
         return view('PowerHouse.index');
     }
-    public function indexpm()
+    public function indexpm(Request $request)
     {
-        $start = Carbon::now()->subMonth()->subDay('30')->startOfDay()->format('Y-m-d H:i:s');
-        $end = Carbon::now()->format('Y-m-d H:i:s');
-        $Pmpanel = Pmpanel::orderBy('created_at', 'desc')->Paginate(20);
+        if($request->ajax()){
 
-
-        return view('/powerhouse.indexpm', compact('Pmpanel', 'start', 'end'));
-
-         }
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        return view('/powerhouse.create');
+            //Jika request from_date ada value(datanya) maka
+            if(!empty($request->from_date))
+            {
+                //Jika tanggal awal(from_date) hingga tanggal akhir(to_date) adalah sama maka
+                if($request->from_date === $request->to_date){
+                    //kita filter tanggalnya sesuai dengan request from_date
+                    $data = Pmpanel::whereDate('created_at','=', $request->from_date)->get();
+                }
+                else{
+                    $from_date=$request->from_date;
+                    $to_date=$request->to_date;
+                    $menitawal="00:00:00";
+                    $menitakhir="23:59:59";
+                    $awalkaping= $from_date.' '.$menitawal;
+                    $tungtungkaping=$to_date.' '.$menitakhir;
+                    //kita filter dari tanggal awal ke akhir
+                    $data = Pmpanel::whereBetween('created_at', array($awalkaping, $tungtungkaping))
+                    ->orderBy('created_at', 'desc')->get();
+                }
             }
+            //load data default
+            else
+            {
+                $data = Pmpanel::orderBy('created_at', 'desc')->get();
+            }
+            if ($request->to_date != null) {
+                return datatables()->of($data)
+                        ->addColumn('action', function($data){
+                            $button = '<a href="javascript:void(0)" data-toggle="tooltip"  data-id="'.$data->id.'" data-original-title="Edit" class="edit btn btn-info btn-sm edit-post"><i class="far fa-edit"></i></a>';
+                            $button .= '&nbsp;&nbsp;';
+                            $button .= '<button type="button" name="delete" id="'.$data->id.'" class="delete btn btn-danger btn-sm"><i class="far fa-trash-alt"></i></button>';
+                            $button .= '&nbsp;&nbsp;';
+                            $button .= '<a href="javascript:void(0)" data-toggle="tooltip"  data-id="'.$data->id.'" data-original-title="Export-pdf" id="Export-pdf" class="Export-pdf btn btn-info btn-sm pdf-post" ><i class="fas fa-file-pdf"></i> pdf</a>';
+                            $button .= '&nbsp;&nbsp;';
+                            $button .= '<a href="javascript:void(0)" data-toggle="tooltip"  data-id="'.$data->id.'" data-original-title="Export-xlsx" id="Export-xlsx" class="Export-xlsx btn btn-info btn-sm xlsx-post" ><i class="fas fa-file-excel"></i> xlsx</a>';
+                            return $button;
+                        })
+                        ->rawColumns(['action'])
+                        ->addIndexColumn()
+                        ->make(true);
+            }else{
+                return datatables()->of($data)
+                        ->addColumn('action', function($data){
+                            $button = '<div class="panel"><a href="javascript:void(0)" data-toggle="tooltip"  data-id="'.$data->id.'" data-original-title="Edit" class="edit btn btn-info btn-sm edit-post"><i class="far fa-edit"></i></a>';
+                            $button .= '&nbsp;&nbsp;';
+                            $button .= '<button type="button" name="delete" id="'.$data->id.'" class="delete btn btn-danger btn-sm"><i class="far fa-trash-alt"></i></button></div>';
 
-    public function createpm()
-    {
-        $Equipment= Equipment::where('category_system','like','%'."Elektrikal".'%')
-                ->orderBy('equipment_name')->get();
-
-        $Floor = Floor::all();
+                            return $button;
+                        })
+                        ->rawColumns(['action'])
+                        ->addIndexColumn()
+                        ->make(true);
+            }
+        }
         $Tower = Towers::all();
-        return view('/powerhouse.createpm', compact('Floor', 'Equipment', 'Tower'));
-            }
-
+        return view('powerhouse.indexpm', compact('Tower'));
+    }
+    public function tower()
+    {
+            $data = Towers::all();
+        // return response()->json(['success'=> $data]);
+        echo json_encode($data);
+    }
+    public function lantai($pmpanel)
+    {
+        $id_tower = Towers::where('tower', $pmpanel)->get('id');
+        $s = $id_tower[0];
+        $tower = $s['id'];
+        $data = Floor::where('tower_floor_id', $tower)->get();
+        echo json_encode($data);
+    }
+    public function room($pmpanel)
+    {
+        // return response()->json($pmpanel, 200);
+        // $id_floor = Floor::where('name', $pmpanel)->get('id');
+        // $s = $id_floor[0];
+        // $room = $s['id'];
+        $data = Rooms::where('equipment_id', "2")->get();
+        echo json_encode($data);
+    }
+    public function panel_name($pmpanel)
+    {
+        $id_room = Rooms::where('name', $pmpanel)->get();
+        $s = $id_room[0];
+        $room = $s['id'];
+            $data = Panel_name::where('room_id', $room)->get();
+        // return response()->json(['success'=> $data]);
+        echo json_encode($data);
+    }
     /**
      * Store a newly created resource in storage.
      *
